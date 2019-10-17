@@ -3,3 +3,6 @@
 
 # ignore private test
 /private/*
+
+# ignore IDE settings
+*.code-workspace

@@ -22,7 +22,7 @@ func main() {
 	}
 
 	// Create a database
-	_, err = db.Exec("CREATE DATABASE testDB")
+	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS testDB;")
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
@@ -30,7 +30,7 @@ func main() {
 	}
 
 	// Choose the database
-	_, err = db.Exec("USE testDB")
+	_, err = db.Exec("USE testDB;")
 	if err != nil {
 		fmt.Println(err.Error())
 	} else {
@@ -38,8 +38,10 @@ func main() {
 	}
 
 	// Create a vaultdir table
-	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXIST vaultdir(did int PRIMARY KEY NOT NULL AUTO_INCREMENT,
-		name varchar(256) NOT NULL);`)
+	stmt, err := db.Prepare(`CREATE TABLE IF NOT EXISTS vaultdir(
+		did int  NOT NULL AUTO_INCREMENT,
+		name varchar(256) NOT NULL,
+		PRIMARY KEY(did, name));`)
 
 	_, err = stmt.Exec()
 	if err != nil {
@@ -47,12 +49,13 @@ func main() {
 	}
 
 	// Create a vault table
-	stmt, err = db.Prepare(`CREATE TABLE IF NOT EXIST vault(vid int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	stmt, err = db.Prepare(`CREATE TABLE IF NOT EXISTS vault(
 		did int,
 		name varchar(256) NOT NULL,
 		size int NOT NULL DEFAULT 0,
 		status int NOT NULL DEFAULT 0,
-		FOREIGN KEY (did) REFERENCES vaultdir(did) ON DELETE RESTRICT ON UPDATE CASCADE);`)
+		FOREIGN KEY (did) REFERENCES vaultdir(did) ON DELETE RESTRICT ON UPDATE CASCADE,
+		PRIMARY KEY (did, name));`)
 
 	_, err = stmt.Exec()
 	if err != nil {
@@ -60,10 +63,10 @@ func main() {
 	}
 
 	// Create a file table
-	stmt, err = db.Prepare(`CREATE TABLE IF NOT EXIST file(fid int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+	stmt, err = db.Prepare(`CREATE TABLE IF NOT EXISTS file(
+		filename varchar(256) NOT NULL,
 		orifsize BIGINT NOT NULL,
 		dedupfsize BIGINT NOT NULL,
-		filename varchar(256) NOT NULL,
 		first_created DATETIME NOT NULL,
 		last_modified DATETIME NOT NULL,
 		status int NOT NULL DEFAULT 0);`)
@@ -74,7 +77,7 @@ func main() {
 	}
 	
 	// Create a file-vault mapping table
-	stmt, err = db.Prepare(`CREATE TABLE IF NOT EXIST filemap(
+	stmt, err = db.Prepare(`CREATE TABLE IF NOT EXISTS filemap(
 		vid int NOT NULL,
 		fid int NOT NULL,
 		FOREIGN KEY (vid) REFERENCES vault(vid) ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -84,5 +87,22 @@ func main() {
 	_, err = stmt.Exec()
 	if err != nil {
 		fmt.Println(err.Error())
+	}
+
+	rows, err := db.Query(`SELECT v.NAME from vault v INNER JOIN filemap fm ON fm.vid = v.vid
+		INNER JOIN file f ON fm.fid = f.fid WHERE f.FILENAME = ?`, "jack.tmp")
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer rows.Close()
+
+	var vname string
+
+	for rows.Next() {
+		err := rows.Scan(&vname)
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(vname)
 	}
 }
