@@ -1,55 +1,49 @@
 package workerpool
 
-type TaskCallbackReturn interface{}
 type TaskCallbackInput  interface{}
 
 type TaskCallback interface {
-	OnStart(TaskCallbackInput) TaskCallbackReturn
-	OnExit(TaskCallbackInput) TaskCallbackReturn
-	OnSucceed(TaskCallbackInput) TaskCallbackReturn
-	OnFail(TaskCallbackInput) TaskCallbackReturn
-	OnTimeOut(TaskCallbackInput) TaskCallbackReturn
+	OnStart(TaskCallbackInput)
+	OnExit(TaskCallbackInput)
+	OnSucceed(TaskCallbackInput)
+	OnFail(TaskCallbackInput)
+	OnTimeout(TaskCallbackInput)
 }
 
 type CustomTaskCallback struct {
-	OnStartFn   func(TaskCallbackInput) TaskCallbackReturn
-	OnExitFn    func(TaskCallbackInput) TaskCallbackReturn
-	OnSucceedFn func(TaskCallbackInput) TaskCallbackReturn
-	OnFailFn    func(TaskCallbackInput) TaskCallbackReturn
-	OnTimeOutFn func(TaskCallbackInput) TaskCallbackReturn
+	OnStartFn   func(TaskCallbackInput)
+	OnExitFn    func(TaskCallbackInput)
+	OnSucceedFn func(TaskCallbackInput)
+	OnFailFn    func(TaskCallbackInput)
+	OnTimeuutFn func(TaskCallbackInput)
 }
 
-func (c *CustomTaskCallback) OnStart(input TaskCallbackInput) TaskCallbackReturn {
+func (c *CustomTaskCallback) OnStart(input TaskCallbackInput) {
 	if c.OnStartFn != nil {
-		return c.OnStartFn(input)
+		c.OnStartFn(input)
 	}
-	return nil
 }
 
-func (c *CustomTaskCallback) OnExit(input TaskCallbackInput) TaskCallbackReturn {
+func (c *CustomTaskCallback) OnExit(input TaskCallbackInput) {
 	if c.OnExitFn != nil {
-		return c.OnExitFn(input)
+		c.OnExitFn(input)
 	}
-	return nil
 }
 
-func (c *CustomTaskCallback) OnSucceed(input TaskCallbackInput) TaskCallbackReturn {
+func (c *CustomTaskCallback) OnSucceed(input TaskCallbackInput) {
 	if c.OnSucceedFn != nil {
-		return c.OnSucceedFn(input)
+		c.OnSucceedFn(input)
 	}
-	return nil
 }
 
-func (c *CustomTaskCallback) OnFail(input TaskCallbackInput) TaskCallbackReturn {
+func (c *CustomTaskCallback) OnFail(input TaskCallbackInput) {
 	if c.OnFailFn != nil {
-		return c.OnFailFn(input)
+		c.OnFailFn(input)
 	}
-	return nil
 }
 
-func (c *CustomTaskCallback) OnTimeOut(input TaskCallbackInput) TaskCallbackReturn {
-	if c.OnTimeOutFn != nil {
-		return c.OnTimeOutFn(input)
+func (c *CustomTaskCallback) OnTimeuut(input TaskCallbackInput) {
+	if c.OnTimeuutFn != nil {
+		c.OnTimeuutFn(input)
 	}
-	return nil
 }

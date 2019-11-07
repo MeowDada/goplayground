@@ -22,10 +22,12 @@ type Task interface {
 	StartTiming()       time.Time
 	JoinTiming()        time.Time
 	EndTiming()         time.Time
-	TimeOut()           time.Time
+	Timeout()           time.Duration
 	State()             TaskState
 	AssignedWorkerID()  WorkerID
 	Jobs()              JobContainer
+	Abort()
+	IgnoreJobFail()     bool
 	Callback()          TaskCallback
 	Priority()          int
 }

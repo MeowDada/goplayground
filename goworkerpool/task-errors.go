@@ -7,6 +7,8 @@ const (
 	ErrEmptyTask        TaskResultErrorCode = iota
 	ErrTaskNotImplement
 	ErrNonExistErrorCode
+	ErrTaskTimeOut
+	ErrJobFailed
 )
 
 var taskResultErrorCodeMap = TaskResultErrorCodeMap {
@@ -21,6 +23,14 @@ var taskResultErrorCodeMap = TaskResultErrorCodeMap {
 	ErrNonExistErrorCode : TaskResultError {
 		errorType:   ErrorTypeInternal,
 		description: "The error code dose not exist",
+	},
+	ErrTaskTimeOut : TaskResultError {
+		errorType:   ErrorTypeNormal,
+		description: "The task has exceed exection time limit",
+	},
+	ErrJobFailed : TaskResultError {
+		errorType:   ErrorTypeNormal,
+		description: "A job failed so the task has been halt and exited",
 	},
 }
 

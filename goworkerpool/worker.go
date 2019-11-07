@@ -42,6 +42,30 @@ func NewWorker(id WorkerID, interval time.Duration, processingChannel Workerpool
 func (w *Worker) Do(task Task) TaskResult {
 
 	taskResult := TaskResult{ id: w.id, }
+	callback := task.Callback()
+	quitCh := make(chan bool)
+	shouldExit := false
+
+	// Invoke registered callback functions of the task
+	callback.OnStart(task)
+	defer callback.OnExit(task)
+
+	// Quit channel function
+	go func() {
+		shouldExit = <-quitCh
+		close(quitCh)
+	}()
+
+	// Timeout function
+	go func() {
+		for {
+			if time.Since(task.StartTiming()).Milliseconds() > task.Timeout().Milliseconds() {
+				callback.OnTimeout(task)
+				quitCh <- true
+				return
+			}
+		}
+	}()
 
 	// Pop job from task's job container and execute it
 	container := task.Jobs()
@@ -52,6 +76,28 @@ func (w *Worker) Do(task Task) TaskResult {
 
 		// Append the job result to the task results
 		taskResult.Append(result)
+
+		// If the executing job failed, invoke the corresponding callback function,
+		// and check if this task should go on or not.
+		if result.err != nil {
+			callback.OnFail(result)
+			taskResult.err = ErrorCodeToResult(ErrJobFailed)
+			if !task.IgnoreJobFail() {
+				task.Abort()
+				return taskResult
+			}
+		}
+
+		// Graceful exit if timeout limit reached
+		if shouldExit {
+			taskResult.err = ErrorCodeToResult(ErrTaskTimeOut)
+			task.Abort()
+			return taskResult
+		}
+	}
+
+	if taskResult.Err() == nil {
+		callback.OnSucceed(task)
 	}
 
 	return taskResult
